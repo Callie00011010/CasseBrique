@@ -1,0 +1,51 @@
+# depslib dependency file v1.0
+1751847730 source:c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"raylib.h"
+	"main.h"
+	"game.h"
+	"home.h"
+	"levels.h"
+
+1751849320 source:c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\game.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"raylib.h"
+	"game.h"
+	"main.h"
+	"levels.h"
+
+1751847460 source:c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\levels.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"raylib.h"
+	"levels.h"
+	"main.h"
+
+1751745041 source:c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\menu.c
+
+1751745103 source:c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\pause.c
+
+1751843070 source:c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\home.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"raylib.h"
+	"home.h"
+	"main.h"
+
+1751840757 c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\main.h
+
+1751760230 c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\game.h
+
+1751803718 c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\home.h
+
+1751745110 c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\pause.h
+
+1751846094 c:\users\serre\desktop\projets_dev\c\cassebrique\cassebrique\levels.h
+	"raylib.h"
+
