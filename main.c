@@ -43,6 +43,7 @@ int main(void)
 
                 DrawHome();
 
+                /*
                 //fonction pour voir les coordonnees
                 if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     Vector2 mousePosCoordonnee = GetMousePosition();
@@ -50,6 +51,7 @@ int main(void)
                     sprintf(pos,"%.0f ; %.0f",mousePosCoordonnee.x,mousePosCoordonnee.y);
                     DrawText(pos,250,250,25,MAGENTA);
                 }
+                */
 
 
             EndDrawing();
@@ -68,6 +70,7 @@ int main(void)
                 DrawGame();
 
 
+                /*
                 //fonction pour voir les coordonnees
                 if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     Vector2 mousePosCoordonnee = GetMousePosition();
@@ -75,6 +78,7 @@ int main(void)
                     sprintf(pos,"%.0f ; %.0f",mousePosCoordonnee.x,mousePosCoordonnee.y);
                     DrawText(pos,250,250,25,MAGENTA);
                 }
+                */
 
             EndDrawing();
 
@@ -92,6 +96,7 @@ int main(void)
                 DrawGame();
 
 
+                /*
                 //fonction pour voir les coordonnees
                 if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     Vector2 mousePosCoordonnee = GetMousePosition();
@@ -99,6 +104,7 @@ int main(void)
                     sprintf(pos,"%.0f ; %.0f",mousePosCoordonnee.x,mousePosCoordonnee.y);
                     DrawText(pos,250,250,25,MAGENTA);
                 }
+                */
 
             EndDrawing();
 
@@ -116,6 +122,7 @@ int main(void)
                 DrawGame();
 
 
+                /*
                 //fonction pour voir les coordonnees
                 if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     Vector2 mousePosCoordonnee = GetMousePosition();
@@ -123,6 +130,7 @@ int main(void)
                     sprintf(pos,"%.0f ; %.0f",mousePosCoordonnee.x,mousePosCoordonnee.y);
                     DrawText(pos,250,250,25,MAGENTA);
                 }
+                */
 
             EndDrawing();
 
@@ -140,6 +148,7 @@ int main(void)
                 DrawGame();
 
 
+                /*
                 //fonction pour voir les coordonnees
                 if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     Vector2 mousePosCoordonnee = GetMousePosition();
@@ -147,6 +156,7 @@ int main(void)
                     sprintf(pos,"%.0f ; %.0f",mousePosCoordonnee.x,mousePosCoordonnee.y);
                     DrawText(pos,250,250,25,MAGENTA);
                 }
+                */
 
             EndDrawing();
 
