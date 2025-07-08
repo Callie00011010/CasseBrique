@@ -16,23 +16,22 @@ typedef struct BrickPhysic BrickPhysic;
 struct BrickPhysic {
     BrickType brickType;
     Rectangle rectBrick;
+    Vector2 centerBrick;
 };
 
 
 
-extern int nbeBricksWidth, nbeBricksHeight, nbeBricks;
-extern BrickPhysic *brickLevel1, *brickLevel2, *brickLevel3, *brickLevel4;
+extern int nbeBricksWidth, nbeBricksHeight, nbeBricks, nbeBrickRemaining;
+extern BrickPhysic *currentBrickLevel;
 
 
+extern BrickType brickEasy, brickMedium, brickHard, brickDemon;
 
 
 void InitLevels(void);
-void DrawLevel1(void);
-void DrawLevel2(void);
-void DrawLevel3(void);
-void DrawLevel4(void);
 void UnloadLevels(void);
-
+void DrawLevel(void);
+void LoadLevel(BrickType brickType);
 
 
 #endif // LEVELS_H

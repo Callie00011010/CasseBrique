@@ -10,6 +10,7 @@ extern const int screenWidth;
 extern const int screenHeight;
 
 extern CurrentScreen currentScreen;
+extern bool needToLoadLevel;
 
 
 #endif // MAIN_H

@@ -22,6 +22,8 @@ Rectangle rectLvl2;
 Rectangle rectLvl3;
 Rectangle rectLvl4;
 
+int currentLevel;
+
 
 
 //------------------------------------------------------------------------------------------------
@@ -45,6 +47,8 @@ void InitHome(void)
     rectLvl2 = (Rectangle){screenWidth/2-100,350,200,60};
     rectLvl3 = (Rectangle){screenWidth/2-100,450,200,60};
     rectLvl4 = (Rectangle){screenWidth/2-100,550,200,60};
+
+    currentLevel = 1;
 
 }
 
@@ -105,10 +109,10 @@ void DrawHome(void)
     DrawText("LEVEL 3", rectLvl3.x+rectLvl3.width/2-MeasureText("LEVEL 3", 40)/2, rectLvl3.y+(rectLvl3.height/2)-20, 40, BLACK);
     DrawText("LEVEL 4", rectLvl4.x+rectLvl4.width/2-MeasureText("LEVEL 4", 40)/2, rectLvl4.y+(rectLvl4.height/2)-20, 40, BLACK);
 
-    if (CheckCollisionPointRec(GetMousePosition(),rectLvl1) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {currentScreen = SCREEN_LEVEL1;}
-    if (CheckCollisionPointRec(GetMousePosition(),rectLvl2) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {currentScreen = SCREEN_LEVEL2;}
-    if (CheckCollisionPointRec(GetMousePosition(),rectLvl3) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {currentScreen = SCREEN_LEVEL3;}
-    if (CheckCollisionPointRec(GetMousePosition(),rectLvl4) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {currentScreen = SCREEN_LEVEL4;}
+    if (CheckCollisionPointRec(GetMousePosition(),rectLvl1) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {currentScreen = SCREEN_LEVEL1; currentLevel = 1;}
+    if (CheckCollisionPointRec(GetMousePosition(),rectLvl2) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {currentScreen = SCREEN_LEVEL2; currentLevel = 2;}
+    if (CheckCollisionPointRec(GetMousePosition(),rectLvl3) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {currentScreen = SCREEN_LEVEL3; currentLevel = 3;}
+    if (CheckCollisionPointRec(GetMousePosition(),rectLvl4) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {currentScreen = SCREEN_LEVEL4; currentLevel = 4;}
 
 
 }

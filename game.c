@@ -1,15 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #include "raylib.h"
 #include "game.h"
 #include "main.h"
 #include "levels.h"
 
 
-#define SPEED_BALL_X    800.0f
-#define SPEED_BALL_Y    -500.0f
+#define SPEED_BALL_X    400.0f
+#define SPEED_BALL_Y    -375.0f
 #define SPEED_PLATFORM  15
+#define PLATFORM_WIDTH_INIT 150
 #define NBE_VIE_TOTALE  5
 
 
@@ -20,7 +22,7 @@ Font roboto;
 Font montserrat;
 Font roboto_SemiBold;
 
-bool isPaused;
+bool isPaused, isFinish;
 
 int platformWidth;
 Rectangle platform;
@@ -45,12 +47,17 @@ int timerSecondes;
 float pausedTime = 0.0f;
 float startTime = 0.0f;
 
+char resultL1[64], resultL2[64], resultL3[64];
+
 Rectangle rectPause;
 /*Rectangle rectHome;        // ---NE SERT PLUS, reste au cas du besoin d'un bouton supp     */
 
 Rectangle rectMenuResume;
 Rectangle rectMenuRestart;
 Rectangle rectMenuHome;
+
+Rectangle rectFinishRestart;
+Rectangle rectFinishHome;
 
 
 
@@ -64,10 +71,11 @@ void InitGame(void)
     roboto_SemiBold = LoadFont("assets/Roboto-SemiBold.ttf");
 
     isPaused = false;
+    isFinish = false;
 
 
     //#####JEU#####
-    platformWidth = 100;
+    platformWidth = PLATFORM_WIDTH_INIT;
     platform = (Rectangle){screenWidth/2-(platformWidth/2),screenHeight-37,platformWidth,12};
 
 
@@ -94,6 +102,9 @@ void InitGame(void)
     rectMenuResume = (Rectangle){screenWidth/2-95,200,190,50};
     rectMenuRestart = (Rectangle){screenWidth/2-95,300,190,50};
     rectMenuHome = (Rectangle){screenWidth/2-95,400,190,50};
+
+    rectFinishRestart = (Rectangle){screenWidth/2-95,screenHeight/2+50,190,50};
+    rectFinishHome = (Rectangle){screenWidth/2-95,screenHeight/2+150,190,50};
 }
 
 
@@ -104,13 +115,13 @@ void InitGame(void)
 
 void UpdateGame(void)
 {
-    if (isPaused == false) {
+    if (!isPaused && !isFinish) {
         timerTotal = (int)(GetTime()-pausedTime-startTime);
         timerMinutes = timerTotal/60;
         timerSecondes = timerTotal%60;
         sprintf(timer, "%02d:%02d", timerMinutes, timerSecondes);
     }
-    if (isPaused == true) {pausedTime = GetTime()-startTime-pausedTime;}
+    if (isPaused) {pausedTime = GetTime()-startTime-pausedTime;}
 }
 
 
@@ -147,8 +158,10 @@ void DrawGame(void)
     DrawRectangle(16,13,4,10,BEIGE); //dessin pause
     DrawRectangle(22,13,4,10,BEIGE);
 
-    if ((CheckCollisionPointRec(GetMousePosition(),rectPause) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) || IsKeyPressed(KEY_F1) == true) {
-        isPaused = true;
+    if (!isFinish) {
+        if ((CheckCollisionPointRec(GetMousePosition(),rectPause) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) || IsKeyPressed(KEY_F1) == true) {
+            isPaused = true;
+        }
     }
 
 
@@ -175,7 +188,7 @@ void DrawGame(void)
 
     //===================PLATFORM===========================================================================================
     DrawRectangleRec(platform,ORANGE);
-    if (isPaused == false) {
+    if (!isPaused && !isFinish) {
         if (IsKeyDown(KEY_LEFT) == true && platform.x >= 0) {platform.x -= SPEED_PLATFORM;}
         if (IsKeyDown(KEY_RIGHT) == true && (platform.x+platformWidth) <= screenWidth) {platform.x += SPEED_PLATFORM;}
     }
@@ -186,7 +199,7 @@ void DrawGame(void)
     DrawCircle(pos_ball.x,pos_ball.y,ballWidth,WHITE);
 
     //-------------------collisions avec les murs-------------------
-    if (waitingForRespawn == false && isPaused == false) {
+    if (!waitingForRespawn && !isPaused && !isFinish) {
         if (pos_ball.x <= (0+ballWidth) || pos_ball.x >= (screenWidth-ballWidth)) {speed_ball.x = -speed_ball.x;}
         if (pos_ball.y <= (41+ballWidth)) {speed_ball.y = -speed_ball.y;}
         pos_ball.x += speed_ball.x * GetFrameTime();
@@ -204,99 +217,41 @@ void DrawGame(void)
         speed_ball.y = SPEED_BALL_Y;
     }
 
-    if (waitingForRespawn == true) {pos_ball.x = platform.x + (platformWidth/2);}
+    if (waitingForRespawn) {pos_ball.x = platform.x + (platformWidth/2);}
 
-    if (waitingForRespawn == true && (GetTime() - respawnStartTime) >= 0.5f) {
+    if (waitingForRespawn && (GetTime() - respawnStartTime) >= 0.5f) {
         waitingForRespawn = false;
     }
 
     //-------------------collisions avec la platform-------------------
-    if (CheckCollisionCircleRec(pos_ball, ballWidth, platform) == true) {
-        speed_ball.x = -speed_ball.x;
+    if (CheckCollisionCircleRec(pos_ball, ballWidth, platform)) {
         speed_ball.y = -speed_ball.y;
         pos_ball.x += speed_ball.x * GetFrameTime();
-        pos_ball.y += speed_ball.y * GetFrameTime();
+        pos_ball.y += (speed_ball.y * GetFrameTime()) - platform.height;
     }
 
 
     //-------------------collisions avec les bricks-------------------
-    //---Lvl 1---
     indexBrickCollisions = 0;
     for (indexBrickCollisions = 0; indexBrickCollisions < nbeBricks; indexBrickCollisions++) {
-        if (brickLevel1[indexBrickCollisions].brickType.exist == true) {
-            if (CheckCollisionCircleRec(pos_ball, ballWidth, brickLevel1[indexBrickCollisions].rectBrick) == true) {
+        if (currentBrickLevel[indexBrickCollisions].brickType.exist) {
+            if (CheckCollisionCircleRec(pos_ball, ballWidth, currentBrickLevel[indexBrickCollisions].rectBrick)) {
                 //----Effects Ball
-                speed_ball.x = -speed_ball.x;
-                speed_ball.y = -speed_ball.y;
-                pos_ball.x += speed_ball.x * GetFrameTime();
-                pos_ball.y += speed_ball.y * GetFrameTime();
+                float verticalCollisionBrick = fabsf(pos_ball.x - (currentBrickLevel[indexBrickCollisions].centerBrick.x)) - (((currentBrickLevel[indexBrickCollisions].rectBrick.width)/2.0f)+ballWidth); // gauche et droit
+                float horizontalCollisionBrick = fabsf(pos_ball.y - (currentBrickLevel[indexBrickCollisions].centerBrick.y)) - (((currentBrickLevel[indexBrickCollisions].rectBrick.height)/2.0f)+ballWidth); //haut et bas
 
-                //----Effects Bricks
-                brickLevel1[indexBrickCollisions].brickType.durability--;
-                if (brickLevel1[indexBrickCollisions].brickType.durability == 0) {
-                    brickLevel1[indexBrickCollisions].brickType.exist = false;
-                    brickLevel1[indexBrickCollisions].rectBrick = (Rectangle){0,0,0,0};
+                if (fabsf(horizontalCollisionBrick) < fabsf(verticalCollisionBrick)) {
+                    speed_ball.y = -speed_ball.y;
+                } else {
+                    speed_ball.x = -speed_ball.x;
                 }
 
-            }
-        }
-    }
-
-    //---Lvl 2---
-    indexBrickCollisions = 0;
-    for (indexBrickCollisions = 0; indexBrickCollisions < nbeBricks; indexBrickCollisions++) {
-        if (brickLevel2[indexBrickCollisions].brickType.exist == true) {
-            if (CheckCollisionCircleRec(pos_ball, ballWidth, brickLevel2[indexBrickCollisions].rectBrick) == true) {
-                //----Effects Ball
-                speed_ball.x = -speed_ball.x;
-                speed_ball.y = -speed_ball.y;
                 pos_ball.x += speed_ball.x * GetFrameTime();
                 pos_ball.y += speed_ball.y * GetFrameTime();
 
                 //----Effects Bricks
-                brickLevel2[indexBrickCollisions].brickType.durability--;
-                if (brickLevel2[indexBrickCollisions].brickType.durability == 0) {brickLevel2[indexBrickCollisions].brickType.exist = false;}
-
-            }
-        }
-    }
-
-    //---Lvl 3---
-    indexBrickCollisions = 0;
-    for (indexBrickCollisions = 0; indexBrickCollisions < nbeBricks; indexBrickCollisions++) {
-        if (brickLevel3[indexBrickCollisions].brickType.exist == true) {
-            if (CheckCollisionCircleRec(pos_ball, ballWidth, brickLevel3[indexBrickCollisions].rectBrick) == true) {
-                //----Effects Ball
-                speed_ball.x = -speed_ball.x;
-                speed_ball.y = -speed_ball.y;
-                pos_ball.x += speed_ball.x * GetFrameTime();
-                pos_ball.y += speed_ball.y * GetFrameTime();
-
-                //----Effects Bricks
-                brickLevel3[indexBrickCollisions].brickType.durability--;
-                if (brickLevel3[indexBrickCollisions].brickType.durability == 0) {brickLevel3[indexBrickCollisions].brickType.exist = false;}
-
-            }
-        }
-    }
-
-    //---Lvl 4---
-    indexBrickCollisions = 0;
-    for (indexBrickCollisions = 0; indexBrickCollisions < nbeBricks; indexBrickCollisions++) {
-        if (brickLevel4[indexBrickCollisions].brickType.exist == true) {
-            if (CheckCollisionCircleRec(pos_ball, ballWidth, brickLevel4[indexBrickCollisions].rectBrick) == true) {
-                //----Effects Ball
-                speed_ball.x = -speed_ball.x;
-                speed_ball.y = -speed_ball.y;
-                pos_ball.x += speed_ball.x * GetFrameTime();
-                pos_ball.y += speed_ball.y * GetFrameTime();
-
-                //----Effects Bricks
-                brickLevel4[indexBrickCollisions].brickType.durability--;
-                if (brickLevel4[indexBrickCollisions].brickType.durability == 0) {
-                        brickLevel4[indexBrickCollisions].brickType.exist = false;
-
-                }
+                currentBrickLevel[indexBrickCollisions].brickType.durability--;
+                if (currentBrickLevel[indexBrickCollisions].brickType.durability == 0) {currentBrickLevel[indexBrickCollisions].brickType.exist = false; nbeBrickRemaining--;}
 
             }
         }
@@ -307,7 +262,9 @@ void DrawGame(void)
 
 
 
-    //===================SCREEN PAUSE=======================================================================================
+    //======================================================================================================================
+    //-------------------SCREEN PAUSE---------------------------------------------------------------------------------------
+    //======================================================================================================================
     if (isPaused == true) {
         DrawRectangle(0,0,screenWidth,screenHeight,(Color){0,0,0,150});
         //DrawTextEx(roboto,"PAUSE",(Vector2){(screenWidth/2-((MeasureTextEx(roboto,"PAUSE",50,1)).x/2)),110},50,1,WHITE);
@@ -356,15 +313,158 @@ void DrawGame(void)
         DrawRectangleGradientEx((Rectangle){rectMenuHome.x+rectMenuHome.width-3, rectMenuHome.y+rectMenuHome.height-3, 3, 3}, DARKGRAY, WHITE, WHITE, WHITE);
 
 
-
         if (CheckCollisionPointRec(GetMousePosition(),rectMenuResume) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {isPaused = false;}
-        if (CheckCollisionPointRec(GetMousePosition(),rectMenuRestart) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {InitGame();}
+        if (CheckCollisionPointRec(GetMousePosition(),rectMenuRestart) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {
+            InitGame();
+            InitLevels();
+            needToLoadLevel = true;
+        }
         if (CheckCollisionPointRec(GetMousePosition(),rectMenuHome) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {
             InitGame();
             InitLevels();
+            needToLoadLevel = true;
             currentScreen = SCREEN_HOME;
         }
     }
+
+
+
+
+
+    //======================================================================================================================
+    //-------------------SCREEN GAME FINISH---------------------------------------------------------------------------------------
+    //======================================================================================================================
+    //--------------WIN-----------------
+    if (nbeBrickRemaining == 0 && nbeVie > 0 && nbeVie <= NBE_VIE_TOTALE) {
+        isFinish = true;
+        DrawRectangle(0,0,screenWidth,screenHeight,(Color){0,255,0,130});
+        //DrawTextEx(roboto,"VICTORY !",(Vector2){(screenWidth/2-((MeasureTextEx(roboto,"VICTORY !",70,1)).x/2)),(screenHeight/2-100)},70,1,WHITE);
+        //DrawTextEx(roboto_SemiBold,"VICTORY !",(Vector2){(screenWidth/2-((MeasureTextEx(roboto_SemiBold,"VICTORY !",70,1)).x/2)),(screenHeight/2-100)},70,1,WHITE);
+        //DrawTextEx(montserrat,"VICTORY !",(Vector2){(screenWidth/2-((MeasureTextEx(montserrat,"VICTORY !",70,1)).x/2)),(screenHeight/2-100)},70,1,WHITE);
+        DrawText("VICTORY !",(screenWidth/2-(MeasureText("VICTORY !",50)/2)),(screenHeight/2-150),50,WHITE);
+        //sprintf(resultL1 ,"Congrtulation !\nYou won in %s\nwith %d/%d lives remaining", timer, nbeVie, NBE_VIE_TOTALE);
+        sprintf(resultL1 ,"Congratulation !");
+        sprintf(resultL2 ,"You won in %s",timer);
+        sprintf(resultL3 ,"With %d/%d lives remaining",nbeVie, NBE_VIE_TOTALE);
+        //DrawText(resultL1, (screenWidth/2-(MeasureText(resultL1,20)/2)), (screenHeight/2-40), 20, BLACK);
+        DrawText(resultL1, (screenWidth/2-(MeasureText(resultL1,20)/2)), (screenHeight/2-80), 20, BLACK);
+        DrawText(resultL2, (screenWidth/2-(MeasureText(resultL2,20)/2)), (screenHeight/2-55), 20, BLACK);
+        DrawText(resultL3, (screenWidth/2-(MeasureText(resultL3,20)/2)), (screenHeight/2-30), 20, BLACK);
+
+
+
+        DrawRectangleRec(rectFinishRestart,DARKGRAY);
+        DrawText("RESTART",screenWidth/2-40,(screenHeight/2+50)+15,25,BEIGE);
+        DrawCircleSector((Vector2){rectFinishRestart.x+25, rectFinishRestart.y+26}, 15, 210, 500, 20, RED);
+        DrawCircle(rectFinishRestart.x+25, rectFinishRestart.y+26, 10, DARKGRAY);
+        DrawPoly((Vector2){220, (screenHeight/2+50)+20}, 3, 8, 8, RED);
+        DrawRectangleGradientH(rectFinishRestart.x, rectFinishRestart.y+3, 3, rectFinishRestart.height-6, WHITE, DARKGRAY);
+        DrawRectangleGradientH(rectFinishRestart.x+rectFinishRestart.width-3, rectFinishRestart.y+3, 3, rectFinishRestart.height-6, DARKGRAY, WHITE);
+        DrawRectangleGradientV(rectFinishRestart.x+3, rectFinishRestart.y, rectFinishRestart.width-6, 3, WHITE, DARKGRAY);
+        DrawRectangleGradientV(rectFinishRestart.x+3, rectFinishRestart.y+rectFinishRestart.height-3, rectFinishRestart.width-6, 3, DARKGRAY, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishRestart.x, rectFinishRestart.y, 3, 3}, WHITE, WHITE, DARKGRAY, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishRestart.x, rectFinishRestart.y+rectFinishRestart.height-3, 3, 3}, WHITE, WHITE, WHITE, DARKGRAY);
+        DrawRectangleGradientEx((Rectangle){rectFinishRestart.x+rectFinishRestart.width-3, rectFinishRestart.y, 3, 3}, WHITE, DARKGRAY, WHITE, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishRestart.x+rectFinishRestart.width-3, rectFinishRestart.y+rectFinishRestart.height-3, 3, 3}, DARKGRAY, WHITE, WHITE, WHITE);
+
+        DrawRectangleRec(rectFinishHome,DARKGRAY);
+        DrawText("HOME",screenWidth/2-40,(screenHeight/2+150)+15,25,BEIGE);
+        DrawRectangle(rectFinishHome.x+15, rectFinishHome.y+20, 20, 20, RED);
+        DrawRectangle(rectFinishHome.x+22, rectFinishHome.y+30, 7, 10, DARKGRAY);
+        DrawPoly((Vector2){230, (screenHeight/2+150)+17}, 4, 8, 270, RED);
+        DrawPoly((Vector2){223, (screenHeight/2+150)+20}, 3, 7, 285, RED);
+        DrawPoly((Vector2){236, (screenHeight/2+150)+20}, 3, 7, 255, RED);
+        DrawRectangleGradientH(rectFinishHome.x, rectFinishHome.y+3, 3, rectFinishHome.height-6, WHITE, DARKGRAY);
+        DrawRectangleGradientH(rectFinishHome.x+rectFinishHome.width-3, rectFinishHome.y+3, 3, rectFinishHome.height-6, DARKGRAY, WHITE);
+        DrawRectangleGradientV(rectFinishHome.x+3, rectFinishHome.y, rectFinishHome.width-6, 3, WHITE, DARKGRAY);
+        DrawRectangleGradientV(rectFinishHome.x+3, rectFinishHome.y+rectFinishHome.height-3, rectFinishHome.width-6, 3, DARKGRAY, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishHome.x, rectFinishHome.y, 3, 3}, WHITE, WHITE, DARKGRAY, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishHome.x, rectFinishHome.y+rectFinishHome.height-3, 3, 3}, WHITE, WHITE, WHITE, DARKGRAY);
+        DrawRectangleGradientEx((Rectangle){rectFinishHome.x+rectFinishHome.width-3, rectFinishHome.y, 3, 3}, WHITE, DARKGRAY, WHITE, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishHome.x+rectFinishHome.width-3, rectFinishHome.y+rectFinishHome.height-3, 3, 3}, DARKGRAY, WHITE, WHITE, WHITE);
+
+
+        if (CheckCollisionPointRec(GetMousePosition(),rectFinishRestart) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {
+            InitGame();
+            InitLevels();
+            needToLoadLevel = true;
+        }
+        if (CheckCollisionPointRec(GetMousePosition(),rectFinishHome) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {
+            InitGame();
+            InitLevels();
+            needToLoadLevel = true;
+            currentScreen = SCREEN_HOME;
+        }
+
+
+    }
+
+
+
+    //--------------LOSE-----------------
+    if (nbeVie <= 0 && nbeBrickRemaining != 0) {
+        isFinish = true;
+        DrawRectangle(0,0,screenWidth,screenHeight,(Color){255,0,0,200});
+        //DrawTextEx(roboto,"VICTORY !",(Vector2){(screenWidth/2-((MeasureTextEx(roboto,"VICTORY !",70,1)).x/2)),(screenHeight/2-100)},70,1,WHITE);
+        //DrawTextEx(roboto_SemiBold,"VICTORY !",(Vector2){(screenWidth/2-((MeasureTextEx(roboto_SemiBold,"VICTORY !",70,1)).x/2)),(screenHeight/2-100)},70,1,WHITE);
+        //DrawTextEx(montserrat,"VICTORY !",(Vector2){(screenWidth/2-((MeasureTextEx(montserrat,"VICTORY !",70,1)).x/2)),(screenHeight/2-100)},70,1,WHITE);
+        DrawText("DEFEAT !",(screenWidth/2-(MeasureText("DEFEAT !",50)/2)),(screenHeight/2-150),50,WHITE);
+
+        sprintf(resultL1 ,"Game over !");
+        sprintf(resultL2 ,"You lost");
+        sprintf(resultL3 ,"With %d/%d bricks remaining", nbeBrickRemaining, nbeBricks);
+        DrawText(resultL1, (screenWidth/2-(MeasureText(resultL1,20)/2)), (screenHeight/2-80), 20, BLACK);
+        DrawText(resultL2, (screenWidth/2-(MeasureText(resultL2,20)/2)), (screenHeight/2-55), 20, BLACK);
+        DrawText(resultL3, (screenWidth/2-(MeasureText(resultL3,20)/2)), (screenHeight/2-30), 20, BLACK);
+
+
+        DrawRectangleRec(rectFinishRestart,DARKGRAY);
+        DrawText("RESTART",screenWidth/2-40,(screenHeight/2+50)+15,25,BEIGE);
+        DrawCircleSector((Vector2){rectFinishRestart.x+25, rectFinishRestart.y+26}, 15, 210, 500, 20, RED);
+        DrawCircle(rectFinishRestart.x+25, rectFinishRestart.y+26, 10, DARKGRAY);
+        DrawPoly((Vector2){220, (screenHeight/2+50)+20}, 3, 8, 8, RED);
+        DrawRectangleGradientH(rectFinishRestart.x, rectFinishRestart.y+3, 3, rectFinishRestart.height-6, WHITE, DARKGRAY);
+        DrawRectangleGradientH(rectFinishRestart.x+rectFinishRestart.width-3, rectFinishRestart.y+3, 3, rectFinishRestart.height-6, DARKGRAY, WHITE);
+        DrawRectangleGradientV(rectFinishRestart.x+3, rectFinishRestart.y, rectFinishRestart.width-6, 3, WHITE, DARKGRAY);
+        DrawRectangleGradientV(rectFinishRestart.x+3, rectFinishRestart.y+rectFinishRestart.height-3, rectFinishRestart.width-6, 3, DARKGRAY, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishRestart.x, rectFinishRestart.y, 3, 3}, WHITE, WHITE, DARKGRAY, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishRestart.x, rectFinishRestart.y+rectFinishRestart.height-3, 3, 3}, WHITE, WHITE, WHITE, DARKGRAY);
+        DrawRectangleGradientEx((Rectangle){rectFinishRestart.x+rectFinishRestart.width-3, rectFinishRestart.y, 3, 3}, WHITE, DARKGRAY, WHITE, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishRestart.x+rectFinishRestart.width-3, rectFinishRestart.y+rectFinishRestart.height-3, 3, 3}, DARKGRAY, WHITE, WHITE, WHITE);
+
+        DrawRectangleRec(rectFinishHome,DARKGRAY);
+        DrawText("HOME",screenWidth/2-40,(screenHeight/2+150)+15,25,BEIGE);
+        DrawRectangle(rectFinishHome.x+15, rectFinishHome.y+20, 20, 20, RED);
+        DrawRectangle(rectFinishHome.x+22, rectFinishHome.y+30, 7, 10, DARKGRAY);
+        DrawPoly((Vector2){230, (screenHeight/2+150)+17}, 4, 8, 270, RED);
+        DrawPoly((Vector2){223, (screenHeight/2+150)+20}, 3, 7, 285, RED);
+        DrawPoly((Vector2){236, (screenHeight/2+150)+20}, 3, 7, 255, RED);
+        DrawRectangleGradientH(rectFinishHome.x, rectFinishHome.y+3, 3, rectFinishHome.height-6, WHITE, DARKGRAY);
+        DrawRectangleGradientH(rectFinishHome.x+rectFinishHome.width-3, rectFinishHome.y+3, 3, rectFinishHome.height-6, DARKGRAY, WHITE);
+        DrawRectangleGradientV(rectFinishHome.x+3, rectFinishHome.y, rectFinishHome.width-6, 3, WHITE, DARKGRAY);
+        DrawRectangleGradientV(rectFinishHome.x+3, rectFinishHome.y+rectFinishHome.height-3, rectFinishHome.width-6, 3, DARKGRAY, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishHome.x, rectFinishHome.y, 3, 3}, WHITE, WHITE, DARKGRAY, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishHome.x, rectFinishHome.y+rectFinishHome.height-3, 3, 3}, WHITE, WHITE, WHITE, DARKGRAY);
+        DrawRectangleGradientEx((Rectangle){rectFinishHome.x+rectFinishHome.width-3, rectFinishHome.y, 3, 3}, WHITE, DARKGRAY, WHITE, WHITE);
+        DrawRectangleGradientEx((Rectangle){rectFinishHome.x+rectFinishHome.width-3, rectFinishHome.y+rectFinishHome.height-3, 3, 3}, DARKGRAY, WHITE, WHITE, WHITE);
+
+
+        if (CheckCollisionPointRec(GetMousePosition(),rectFinishRestart) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {
+            InitGame();
+            InitLevels();
+            needToLoadLevel = true;
+        }
+        if (CheckCollisionPointRec(GetMousePosition(),rectFinishHome) == true && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true) {
+            InitGame();
+            InitLevels();
+            needToLoadLevel = true;
+            currentScreen = SCREEN_HOME;
+        }
+
+
+
+    }
+
 
 
 

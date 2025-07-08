@@ -6,4 +6,8 @@ void DrawHome(void);
 void UnloadHome(void);
 
 
+extern int currentLevel;
+
+
+
 #endif // HOME_H

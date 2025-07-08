@@ -13,6 +13,9 @@ const int screenWidth = 600;
 const int screenHeight = 700;
 CurrentScreen currentScreen = SCREEN_HOME;
 
+bool needToLoadLevel = true;
+
+
 
 int main(void)
 {
@@ -55,12 +58,13 @@ int main(void)
         case SCREEN_LEVEL1:
             //UPDATE
             UpdateGame();
+            if (needToLoadLevel) {LoadLevel(brickEasy); needToLoadLevel = false;}
 
             //DRAW
             BeginDrawing();
                 ClearBackground(BLACK);
 
-                DrawLevel1();
+                DrawLevel();
                 DrawGame();
 
 
@@ -78,12 +82,13 @@ int main(void)
         case SCREEN_LEVEL2:
             //UPDATE
             UpdateGame();
+            if (needToLoadLevel) {LoadLevel(brickMedium); needToLoadLevel = false;}
 
             //DRAW
             BeginDrawing();
                 ClearBackground(BLACK);
 
-                DrawLevel2();
+                DrawLevel();
                 DrawGame();
 
 
@@ -101,12 +106,13 @@ int main(void)
         case SCREEN_LEVEL3:
             //UPDATE
             UpdateGame();
+            if (needToLoadLevel) {LoadLevel(brickHard); needToLoadLevel = false;}
 
             //DRAW
             BeginDrawing();
                 ClearBackground(BLACK);
 
-                DrawLevel3();
+                DrawLevel();
                 DrawGame();
 
 
@@ -124,12 +130,13 @@ int main(void)
         case SCREEN_LEVEL4:
             //UPDATE
             UpdateGame();
+            if (needToLoadLevel) {LoadLevel(brickDemon); needToLoadLevel = false;}
 
             //DRAW
             BeginDrawing();
                 ClearBackground(BLACK);
 
-                DrawLevel4();
+                DrawLevel();
                 DrawGame();
 
 
